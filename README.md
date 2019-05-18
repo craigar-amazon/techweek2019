@@ -49,4 +49,5 @@ During this lab, you will create a number of S3 buckets. Because S3 bucket names
 
 - You will see the list of 8 columns on the schema page. Click *Next*.
 
-- The final step in the wizard is the *Review* page. Review the settings, then click the *Finish* button. You will now return to the list of tables in the Glue Data Catalog.
+- The final step in the wizard is the *Review* page. Review the settings, then click the *Finish* button. You will now return to the list of tables in the Glue Data Catalog. If you click on the `allyears` table name, you'll see ![this](./Glue-Schema-allyears.png):
+
