@@ -5,7 +5,7 @@
 ### Choose an S3 Bucket Prefix
 During this lab, you will create a number of S3 buckets. Because S3 bucket names need to be globally unique, you should now choose a bucket name prefix based upon your name or email address. For example, `craigr-amazon`. Make a note of your choice. These instructions will subsequently refer to this prefix as `{MyS3Prefix}`. For example, suppose you chose `saraq-edu-nz` as your prefix, and the instructions say to create an S3 bucket called `{S3Prefix}-stations`. Then you should create a bucket called `saraq-edu-nz-stations`.
 
-## Browse the Global Historical Climate Network, Daily Time Series
+## Module 1: Browse the Global Historical Climate Network, Daily Time Series
 
 - Login in AWS Console
 
@@ -65,4 +65,12 @@ SELECT * FROM "ghcnlab"."allyears" limit 10;
 
 - Click the *Run query* button under the SQL editor tabs. A few seconds later, 10 weather observations will appear. Athena has obtained these from the live NOAA dataset.
 
-> Historical note: the query results will probably include temperatures from a station id EZE00100082, with a ymd of 17930101. These temperatures were measured in Prague in Jan 1793, and are among the first systematic, quality controlled weather observations ever made!
+> Historical note: the query results may include temperatures from a station id EZE00100082, with a ymd of 17930101. These temperatures were measured in Prague in Jan 1793, and are among the first systematic, quality controlled weather observations ever made!
+
+**Optional Step**. This step can take a few minutes to run, and typically costs around $0.50. It's useful as a baseline for the optimisations we'll be performing in later modules.
+
+- Click the + button to open a new SQL editor tab. We're going to obtain a set of observations for a specific weather station. This example uses `NZM00093439` - which is the WMO code for Wellington Airport. Enter or paste the SQL below, the click *Run query*. You'll to wait a minute or so for the answer. In particular, Athena had to scan tens of GB to get those rows. This might be acceptable for a casual query, but won't be good enough for a busy researcher. Also, as Athena charges are derived from the volume of data scanned, we'll need to make some optimisations before we can use this data set for intensive analysis.
+
+```SQL
+SELECT * FROM "ghcnlab"."allyears" where stationid = 'NZM00093439' limit 10;
+```
