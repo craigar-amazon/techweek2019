@@ -74,3 +74,4 @@ SELECT * FROM "ghcnlab"."allyears" limit 10;
 ```SQL
 SELECT * FROM "ghcnlab"."allyears" where stationid = 'NZM00093439' limit 10;
 ```
+![query1](./screenshots/Athena-query1.png)
