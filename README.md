@@ -5,13 +5,13 @@
 ### Choose an S3 Bucket Prefix
 During this lab, you will create a number of S3 buckets. Because S3 bucket names need to be globally unique, you should now choose a bucket name prefix based upon your name or email address. For example, `craigr-amazon`. Make a note of your choice. These instructions will subsequently refer to this prefix as `{MyS3Prefix}`. For example, suppose you chose `saraq-edu-nz` as your prefix, and the instructions say to create an S3 bucket called `{S3Prefix}-stations`. Then you should create a bucket called `saraq-edu-nz-stations`.
 
-## Let's Go
+## Browse the Global Historical Climate Network, Daily Time Series
 
 - Login in AWS Console
 
-- Switch region in toolbar to *N. Virginia* (us-east-1)
+- Switch region in toolbar to *N. Virginia* (us-east-1). We'll discuss why we've chosen this region later in the lab.
 
-- Click *Services* in toolbar, then Select *Glue*
+- Click *Services* in toolbar, then Select *Glue*. If you see the Glue welcome page, click *Get started*.
 
 - Click *Databases* in the sidebar (under *Data catalog*)
 
@@ -49,5 +49,20 @@ During this lab, you will create a number of S3 buckets. Because S3 bucket names
 
 - You will see the list of 8 columns on the schema page. Click *Next*.
 
-- The final step in the wizard is the *Review* page. Review the settings, then click the *Finish* button. You will now return to the list of tables in the Glue Data Catalog. If you click on the `allyears` table name, you'll see ![allyears](./screenshots/Glue-Schema-allyears.png):
+- The final step in the wizard is the *Review* page. Review the settings, then click the *Finish* button. You will now return to the list of tables in the Glue Data Catalog. If you click on the `allyears` table name, you'll see: ![allyears](./screenshots/Glue-Schema-allyears.png)
 
+- We can now browse the Global Historical Climate Network, Daily Time Series using the AWS Athena service. Click *Services* in the AWS Console toolbar, then Select *Athena*. Make sure the region in the toolbar is set to *N. Virginia*. If you see the Athena welcome page, click *Get started*.
+
+> AWS Athena is able to run SQL queries directly against S3 buckets. There is no need to load the data into a relational database first. However, Athena does need to run in the same region as the S3 buckets that it's querying. That's why we set the region to N.Virginia at the start of the lab - NOAA's `s3://noaa-ghcn-pds` bucket is located in N.Virginia.
+
+- Select *Query Editor* from the Athena menu. In the sidebar, under *Database*, select `ghcnlab` from the drop down. In the sidebar, under *Tables*, you should see the `allyears` table that we just defined in AWS Glue. Athena is integrated with the Glue data catalog. If you expand the table definition, you'll see the columns we just defined.
+
+- Next to `allyears` table, you'll see a context menu button (three vertical dots). Click the button, and the context menu will contain a *Preview table* option. Click *Preview table*, and an auto-generated SQL statement will be inserted into a *New query* SQL editor tab in the main part of the Athena console page. Here's what the SQL should look like:
+
+```SQL
+SELECT * FROM "ghcnlab"."allyears" limit 10;
+```
+
+- Click the *Run query* button under the SQL editor tabs. A few seconds later, 10 weather observations will appear. Athena has obtained these from the live NOAA dataset.
+
+> Historical note: the query results will probably include temperatures from a station id EZE00100082, with a ymd of 17930101. These temperatures were measured in Prague in Jan 1793, and are among the first systematic, quality controlled weather observations ever made!
