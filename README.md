@@ -5,6 +5,10 @@
 ### Choose an S3 Bucket Prefix
 During this lab, you will create a number of S3 buckets. Because S3 bucket names need to be globally unique, you should now choose a bucket name prefix based upon your name or email address. For example, `craigr-amazon`. Make a note of your choice. These instructions will subsequently refer to this prefix as `{MyS3Prefix}`. For example, suppose you chose `saraq-edu-nz` as your prefix, and the instructions say to create an S3 bucket called `{S3Prefix}-stations`. Then you should create a bucket called `saraq-edu-nz-stations`.
 
+## Background
+We're going to be working with a data set called the Global Historical Climate Network, Daily Time Series. (GHCN-D) This data set is collected from sources such as national meteorological agencies (e.g. NZ MetService, NIWA, the Australian Bureau of Meteorology, the UK Met Office etc.) and published by the US National Oceanic and Atmospheric Administration (NOAA). AWS provides an efficient channel for publishing this data through its Open Data Programme. You can read about this, and many other public data sets, on the [AWS Open Data Registry](https://registry.opendata.aws). The GHCN-D registry entry is <https://registry.opendata.aws/noaa-ghcn/>.
+
+
 ## Module 1: Browse the Global Historical Climate Network, Daily Time Series
 
 - Login in AWS Console
@@ -75,3 +79,27 @@ SELECT * FROM "ghcnlab"."allyears" limit 10;
 SELECT * FROM "ghcnlab"."allyears" where stationid = 'NZM00093439' limit 10;
 ```
 ![query1](./screenshots/Athena-query1.png)
+
+
+## Module 2: Optimise your Climate Queries
+
+### Objective
+We're going to optimise our queries by creating Parquet formatted copy of the data in our own AWS account. In particular, you are going to use the SQL Create Table As Select (CTAS) command to create a new table called `allyears_qa` in the `ghcnlab` database. The `allyears_qa` table will be backed by an S3 bucket in your own account, rather NOAA's. The CTAS command is only going to include data that has passed quality assurance checks (`q_flag` is null). The CTAS command is also going to reformat the CSV source into Parquet.
+
+### Steps
+- Click *Services* in toolbar, then Select *S3*. If you see a welcome page, click *Get started*.
+
+- Click the *Create bucket* button. Recall the value you chose for `{MyS3Prefix}`, then enter the following as the bucket name: `{MyS3Prefix}-obs`. Select *N.Virginia* as the *Region*. By default, all S3 buckets are private, and that's what we want - so accept the defaults.
+
+**Important:** This step will take around XXX minutes, and will scan 
+
+- Click *Services* in the AWS Console toolbar, then Select *Athena*. Open a new SQL editor tab, and paste in the following SQL statement. Replace `{MyS3Prefix}` with your chosen value. Then click the *Run query* button.
+
+```SQL
+/*convert Quality Assured CSV data to Parquet and storing it in a private bucket*/
+CREATE TABLE ghcnlab.allyears_qa
+WITH (
+  format='PARQUET', external_location='s3://{MyS3Prefix}-obs/ghcnlab/allyearsqa/'
+) AS SELECT * FROM ghcnlab.allyears
+WHERE q_flag = '';
+```
