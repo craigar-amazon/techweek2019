@@ -112,5 +112,12 @@ WHERE q_flag = '';
 SELECT * FROM ghcnlab.allyears_qa where stationid = 'NZM00093439' limit 10;
 ```
 
+## Module 3: Calculate some weather station statistics
 
-3 seconds, 5GB
+### Objective
+We're now going to load some weather station attributes, such as their spatial coordinates and names, and use these attributes in relational joins.
+
+### Steps
+
+- The GHCN-D data set includes a list of weather stations containing over 100,000 entries. You can view that here: <http://noaa-ghcn-pds.s3.amazonaws.com/ghcnd-stations.txt>
+Note that this file is made up of fixed width columns. We can use AWS Glue to convert this to CSV, or you can use Excel to do the conversion manually. However, you can take a shortcut and just download a pre-converted stations file from the [data folder](./data/ghcnd-stations.csv) in this repository.
