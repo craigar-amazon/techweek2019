@@ -91,15 +91,26 @@ We're going to optimise our queries by creating Parquet formatted copy of the da
 
 - Click the *Create bucket* button. Recall the value you chose for `{MyS3Prefix}`, then enter the following as the bucket name: `{MyS3Prefix}-obs`. Select *N.Virginia* as the *Region*. By default, all S3 buckets are private, and that's what we want - so accept the defaults.
 
-**Important:** This step will take around XXX minutes, and will scan 
+**Important:** This step will take around 7 minutes to execute, and will scan around 100GB.
 
 - Click *Services* in the AWS Console toolbar, then Select *Athena*. Open a new SQL editor tab, and paste in the following SQL statement. Replace `{MyS3Prefix}` with your chosen value. Then click the *Run query* button.
 
 ```SQL
-/*convert Quality Assured CSV data to Parquet and storing it in a private bucket*/
+/*convert quality assured CSV data to Parquet, storing it in a private bucket*/
 CREATE TABLE ghcnlab.allyears_qa
 WITH (
   format='PARQUET', external_location='s3://{MyS3Prefix}-obs/ghcnlab/allyearsqa/'
 ) AS SELECT * FROM ghcnlab.allyears
 WHERE q_flag = '';
 ```
+
+- Once the query completes, have a look at the *Tables* list in the Athena sidebar. You'll see a new table called `allyears_qa` has been added to the `ghcnlab` database.
+
+- Let's re-run the Wellington Airport query against the `allyears_qa` table, and see the difference that Parquet formatting has made. When you run the following query, you will see that execution time has dropped to a few seconds.
+
+ ```SQL
+SELECT * FROM ghcnlab.allyears_qa where stationid = 'NZM00093439' limit 10;
+```
+
+
+3 seconds, 5GB
