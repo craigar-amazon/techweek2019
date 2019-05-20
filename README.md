@@ -121,3 +121,38 @@ We're now going to load some weather station attributes, such as their spatial c
 
 - The GHCN-D data set includes a list of weather stations containing over 100,000 entries. You can view that here: <http://noaa-ghcn-pds.s3.amazonaws.com/ghcnd-stations.txt>
 Note that this file is made up of fixed width columns. We can use AWS Glue to convert this to CSV, or you can use Excel to do the conversion manually. However, you can take a shortcut and just download a pre-converted stations file from the [data folder](./data/ghcnd-stations.csv) in this repository.
+
+- Click *Services* in toolbar, then Select *S3*.
+
+- Click the *Create bucket* button. Recall the value you chose for `{MyS3Prefix}`, then enter the following as the bucket name: `{MyS3Prefix}-stations`. Select *N.Virginia* as the *Region*. By default, all S3 buckets are private, and that's what we want - so accept the defaults.
+
+
+- Click on the new `{MyS3Prefix}-stations` bucket. You should see a message indicating that the bucket is empty. Click the *Upload* button. Then *Add files*. Navigate to the local directory where you downloaded the `ghcnd-stations.csv` file, then select that file. After the S3 console checks that the file is readable, click the *Next* button on each settings page to accept the defaults. Then click the *Upload* button, and wait until the upload is complete (generally less than a minute). You'll then see the `ghcnd-stations.csv` file in the S3 console.
+
+- Click *Services* in toolbar, then Select *Glue*. Ensure the region is set to *N.Virginia*. Click *Add Tables*, then *Add table manually*. Type `ghcnd_stations` as the *Table name*, and select `ghcnlab` as the *Database*. Click *Next*.
+
+- On the *Add a data store* page, select the *Specified path in my account*. For this table, the S3 bucket is in the same account as the Glue catalog. Next to the *Include path* field, you'll see a folder icon. Click on this to browse your S3 buckets. Select the radio button next to the `{MyS3Prefix}-stations` bucket. Then click the *Select* button. The *Include path* field will now contain the URL: `s3://{MyS3Prefix}-stations/`. Click the *Next* button.
+
+- On the *Choose a data format* page, select *CSV* with a *Delimiter* of *Comma*. Click the *Next* button.
+
+- On the *Define a schema* page, add the following 9 columns. All columns have a *Data type* of *string*.
+```
+id, latitude, longitude, elevation, state, name, gsn_flag, hcn_flag, wmo_id
+```
+
+- After all columns have been added to the schema, click the *Next* button. Review the table definition, then click the *Finish* button. You will see the `ghcnd_stations` table listed in the `ghcnlab` database.
+
+- We'll also create a Parquet-backed copy of this table. Click *Services* in the AWS Console toolbar, then Select *Athena*. Open a new SQL editor tab, and paste in the following SQL statement. Replace `{MyS3Prefix}` with your chosen value. Then click the *Run query* button.
+
+```SQL
+CREATE TABLE ghcnlab.stations_qa
+WITH (
+  format='PARQUET', external_location='s3://{MyS3Prefix}-obs/ghcnlab/stations/'
+) AS SELECT * FROM ghcnlab.ghcnd_stations;
+```
+
+- Now try this query, which returns all the aerodrome weather stations.
+
+```SQL
+SELECT * FROM ghcnlab.stations_qa where lower(name) like '%aero%';
+```
