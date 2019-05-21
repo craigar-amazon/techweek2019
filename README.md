@@ -111,6 +111,19 @@ WHERE q_flag = '';
  ```SQL
 SELECT * FROM ghcnlab.allyears_qa where stationid = 'NZM00093439' limit 10;
 ```
+- We can now doing something more ambitious: like calculating the global temperature and precipitation averages over the past 200 years:
+
+```SQL
+SELECT element,
+         round(avg(CAST(datum AS real)/10),2) AS datumavg
+FROM ghcnlab.allyears_qa
+WHERE element IN ('TMIN', 'TMAX', 'PRCP')
+GROUP BY  element;
+```
+
+> If you want to try different aggregation functions, Athena implements the Presto functions described here: <https://prestodb.github.io/docs/0.172/functions/aggregate.html>
+
+
 
 ## Module 3: Calculate some weather station statistics
 
@@ -157,24 +170,13 @@ WITH (
 SELECT * FROM ghcnlab.stations_qa where lower(name) like '%aero%';
 ```
 
-- And this query, which returns all the NZ WMO stations:
+- And this query, which returns all the NZ WMO stations (identified by the WMO country prefix of 93):
 
 ```SQL
 SELECT * FROM ghcnlab.stations_qa where lower(wmo_id) like '93___';
 ```
-- Now we'll calculate the global temperature and precipitation averages over the past 200 years:
 
-```SQL
-SELECT element,
-         round(avg(CAST(datum AS real)/10),2) AS datumavg
-FROM ghcnlab.allyears_qa
-WHERE element IN ('TMIN', 'TMAX', 'PRCP')
-GROUP BY  element;
-```
-
-> If you want to try different aggregation functions, Athena implements the Presto functions described here: <https://prestodb.github.io/docs/0.172/functions/aggregate.html>
-
-- We can derive more specialised tables for focused analysis. The following command creates a table called `annual_nz` that is restricted to temperatures and precipitation for NZ WMO stations (identified by the WMO country prefix of 93). This table calculates annual averages and extremes from the daily observations for each matching stations.
+- We can derive more specialised tables for focused analysis. The following command creates a table called `annual_nz` that is restricted to temperatures and precipitation for NZ WMO stations. This table calculates annual averages and extremes from the daily observations for each matching stations.
 
 ```SQL
 CREATE TABLE ghcnlab.annual_nz
@@ -194,3 +196,25 @@ WHERE element IN ('TMIN', 'TMAX', 'PRCP')
   and allyears_qa.stationid = stations_qa.id
 GROUP BY  1, 2, 3, 4, 5;
 ```
+
+## Module 4: Visualising spatial and timeseries query results using QuickSight
+
+- Click *Services* in toolbar, then Select *Quicksight*. You'll be prompted to click the *Sign up for Quicksight* button. Choose the *Standard* option. We'll be using the 60-day free trial. Enter your chosen Quicksight account name as `{MyS3Prefix}-qs`. Select your region as *N.Virginia*.
+
+- Click *New analysis*. Then click *New data set*. Find the *Athena* tile in the *Create a Data Set* group.
+
+- You'll be asked to enter a name for your Athena data source. Enter `nzclimate`. Click *Create data source*. Now choose the Athena database from the drop-down. Choose `ghcnlab`. Now select the Athena table to use for visualisations. Select the `annual_nz` table we created in the previous module. Then click *Select*. When prompted to finish data set creation, select *Directly query your data*, then click *Visualize*.
+
+- QuickSight displays the visualisation editor. In the *Visual types* box, choose a *Line chart*. Drag the `year` field into the *X axis* box. Drag the `avgforyear` field into the *Value* box, then set the *Aggregate* to *Average*. This will produce a multi-station average. Drag the `element` field into the *Color* box. You'll see a visualisation like this:
+![QStimeseries1](./screenshots/QS-Timeseries1.png)
+
+- Try creating another visual. Click the *Add* menu option, and select *Visual*. This time using the *Points on Map* option from *Visual types*. Drag the `latitude` and `longitude` fields into the *Geospatial* box. Drag the `yearlo` field, with *Aggregate* set to *Max* into the *Size* field. Drag the `element` field into the *Color* box. You'll see a visualisation like this:
+![QSspatial1](./screenshots/QS-Spatial1.png)
+
+
+
+
+## Cleanup
+You should delete the `{MyS3Prefix}` S3 buckets once you've finished your experiments. These instructions have generated S3 objects totalling roughly 10GB in your account, and you'll be paying for S3 storage at USD 0.023 per GB-month.
+
+You should also close your QuickSight account, if you created one, once you've finished experimenting. Click *Manage Quicksight* in the console toolbar. Select *Account settings*, then click *Unsubscribe*.
