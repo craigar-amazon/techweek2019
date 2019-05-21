@@ -151,8 +151,46 @@ WITH (
 ) AS SELECT * FROM ghcnlab.ghcnd_stations;
 ```
 
-- Now try this query, which returns all the aerodrome weather stations.
+- Now try this query, which returns all the aerodrome weather stations:
 
 ```SQL
 SELECT * FROM ghcnlab.stations_qa where lower(name) like '%aero%';
+```
+
+- And this query, which returns all the NZ WMO stations:
+
+```SQL
+SELECT * FROM ghcnlab.stations_qa where lower(wmo_id) like '93___';
+```
+- Now we'll calculate the global temperature and precipitation averages over the past 200 years:
+
+```SQL
+SELECT element,
+         round(avg(CAST(datum AS real)/10),2) AS datumavg
+FROM ghcnlab.allyears_qa
+WHERE element IN ('TMIN', 'TMAX', 'PRCP')
+GROUP BY  element;
+```
+
+> If you want to try different aggregation functions, Athena implements the Presto functions described here: <https://prestodb.github.io/docs/0.172/functions/aggregate.html>
+
+- We can derive more specialised tables for focused analysis. The following command creates a table called `annual_nz` that is restricted to temperatures and precipitation for NZ WMO stations (identified by the WMO country prefix of 93). This table calculates annual averages and extremes from the daily observations for each matching stations.
+
+```SQL
+CREATE TABLE ghcnlab.annual_nz
+WITH (
+  format='PARQUET', external_location='s3://{MyS3Prefix}-obs/ghcnlab/annualnz/'
+) AS
+SELECT element, substr(ymd, 1, 4) AS "year",
+         stations_qa.name AS "station",
+         CAST(stations_qa.latitude AS real) AS "latitude",
+         CAST(stations_qa.longitude AS real) AS "longitude",
+         round(avg(CAST(datum AS real)/10),2) AS "avgforyear",
+         round(min(CAST(datum AS real)/10),2) AS "yearlo",
+         round(max(CAST(datum AS real)/10),2) AS "yearhi"
+FROM ghcnlab.allyears_qa, ghcnlab.stations_qa
+WHERE element IN ('TMIN', 'TMAX', 'PRCP')
+  and lower(wmo_id) like '93___'
+  and allyears_qa.stationid = stations_qa.id
+GROUP BY  1, 2, 3, 4, 5;
 ```
